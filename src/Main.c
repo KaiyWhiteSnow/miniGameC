@@ -42,22 +42,29 @@ int main()
                     sfVector2f currentPosition = sfSprite_getPosition(sprite);
                     sfVector2f moveRight = {10.0f, 0.0f};
                     sfVector2f newPosition = {currentPosition.x + moveRight.x, currentPosition.y + moveRight.y};
-                    sfSprite_setPosition(sprite, newPosition);
+
+                    sfFloatRect spriteBounds = sfSprite_getGlobalBounds(sprite);
+                    if (newPosition.x + spriteBounds.width <= mode.width)
+                    {
+                        sfSprite_setPosition(sprite, newPosition);
+                    }
                 }
                 else if (keyCode == sfKeyLeft)
                 {
                     sfVector2f currentPosition = sfSprite_getPosition(sprite);
                     sfVector2f moveLeft = {-10.0f, 0.0f};
                     sfVector2f newPosition = {currentPosition.x + moveLeft.x, currentPosition.y + moveLeft.y};
-                    sfSprite_setPosition(sprite, newPosition);
+
+                    sfFloatRect spriteBounds = sfSprite_getGlobalBounds(sprite);
+                    if (newPosition.x >= 0.0f)
+                    {
+                        sfSprite_setPosition(sprite, newPosition);
+                    }
                 }
             }
             else if (event.type == sfEvtMouseButtonPressed)
             {
-                // Handle mouse button press event
                 sfMouseButton mouseButton = event.mouseButton.button;
-                // Perform actions based on the mouseButton
-                // For example, if (mouseButton == sfMouseLeft) { ... }
             }
         }
 
