@@ -31,13 +31,35 @@ int main()
         /* Process events */
         while (sfRenderWindow_pollEvent(window, &event))
         {
-            /* Close window : exit */
             if (event.type == sfEvtClosed)
-            sfRenderWindow_close(window);
+                sfRenderWindow_close(window);
+            else if (event.type == sfEvtKeyPressed)
+            {
+                // Handle key press event
+                sfKeyCode keyCode = event.key.code;
+                if (keyCode == sfKeyRight)
+                {
+                    sfVector2f currentPosition = sfSprite_getPosition(sprite);
+                    sfVector2f moveRight = {10.0f, 0.0f};
+                    sfVector2f newPosition = {currentPosition.x + moveRight.x, currentPosition.y + moveRight.y};
+                    sfSprite_setPosition(sprite, newPosition);
+                }
+                else if (keyCode == sfKeyLeft)
+                {
+                    sfVector2f currentPosition = sfSprite_getPosition(sprite);
+                    sfVector2f moveLeft = {-10.0f, 0.0f};
+                    sfVector2f newPosition = {currentPosition.x + moveLeft.x, currentPosition.y + moveLeft.y};
+                    sfSprite_setPosition(sprite, newPosition);
+                }
+            }
+            else if (event.type == sfEvtMouseButtonPressed)
+            {
+                // Handle mouse button press event
+                sfMouseButton mouseButton = event.mouseButton.button;
+                // Perform actions based on the mouseButton
+                // For example, if (mouseButton == sfMouseLeft) { ... }
+            }
         }
-
-        sfVector2f position = {50.0f, 250.0f};
-        sfSprite_setPosition(sprite, position);
 
         /* Clear the screen */
         sfRenderWindow_clear(window, sfBlack);
