@@ -2,71 +2,55 @@
 #include <SFML/Graphics.h>
 #include <SFML/System/Vector2.h>
 
+/*Prepare textures*/ 
+sfSprite* initializeSprite(char* texture);
+
+//variables
+/* Set movement flags for both players */
+sfBool isPlayer1MovingLeft = sfFalse;
+sfBool isPlayer1MovingRight = sfFalse;
+sfBool isPlayer2MovingLeft = sfFalse;
+sfBool isPlayer2MovingRight = sfFalse;
+
+/* Set movement speed for both players */
+float player1MovementSpeed = 300.0f;
+float player2MovementSpeed = 300.0f;  
+
+/* Set ball velocity */
+sfVector2f ballVelocity = {400.0f, 400.0f};  
+
+/* Set initial positions for both players and ball */
+sfVector2f playerOnePosition = {350.0f, 540.0f};
+sfVector2f playerTwoPosition = {350.0f, 10.0f};
+sfVector2f ballPosition = {350.0f, 250.0f};
+
 int main()
 {
     sfVideoMode mode = {800, 600, 32};
     sfRenderWindow* window;
-    sfTexture* texture;
-    sfSprite* sprite;
-    sfTexture* player2Texture;
-    sfSprite* player2Sprite;
-    sfTexture* ballTexture;
-    sfSprite* ballSprite;
-    sfFont* font;
-    sfText* text;
-    sfMusic* music;
     sfEvent event;
 
     /* Create the main window */
-    window = sfRenderWindow_create(mode, "SFML window", sfResize | sfClose, NULL);
+    window = sfRenderWindow_create(mode, "Ping pong game", sfResize | sfClose, NULL);
     if (!window)
         return 1;
 
-    /* Load player 1 texture */
-    texture = sfTexture_createFromFile("./sprites/player.jpg", NULL);
-    if (!texture)
-        return 1;
-    sprite = sfSprite_create();
-    sfSprite_setTexture(sprite, texture, sfTrue);
+    sfSprite* playerOne = initializeSprite("./sprites/player.jpg");
+    sfSprite* playerTwo = initializeSprite("./sprites/player2.jpg");
+    sfSprite* ball = initializeSprite("./sprites/ball.jpg");
 
-    /* Load player 2 texture */
-    player2Texture = sfTexture_createFromFile("./sprites/player2.jpg", NULL);
-    if (!player2Texture)
-        return 1;
-    player2Sprite = sfSprite_create();
-    sfSprite_setTexture(player2Sprite, player2Texture, sfTrue);
+    sfSprite_setPosition(playerOne, playerOnePosition);
+    sfSprite_setPosition(playerTwo, playerTwoPosition);
+    sfSprite_setPosition(ball, ballPosition);
 
-    /* Load ball texture */
-    ballTexture = sfTexture_createFromFile("./sprites/ball.jpg", NULL);
-    if (!ballTexture)
-        return 1;
-    ballSprite = sfSprite_create();
-    sfSprite_setTexture(ballSprite, ballTexture, sfTrue);
-
-    /* Set initial positions for both players and ball */
-    sfVector2f player1Position = {350.0f, 540.0f};
-    sfVector2f player2Position = {350.0f, 10.0f};
-    sfVector2f ballPosition = {350.0f, 250.0f};
-    sfSprite_setPosition(sprite, player1Position);
-    sfSprite_setPosition(player2Sprite, player2Position);
-    sfSprite_setPosition(ballSprite, ballPosition);
-
-    /* Set movement flags for both players */
-    sfBool isPlayer1MovingLeft = sfFalse;
-    sfBool isPlayer1MovingRight = sfFalse;
-    sfBool isPlayer2MovingLeft = sfFalse;
-    sfBool isPlayer2MovingRight = sfFalse;
-
-    /* Set movement speed for both players */
-    float player1MovementSpeed = 0.5f;
-    float player2MovementSpeed = 0.5f;
-
-    /* Set ball velocity */
-    sfVector2f ballVelocity = {0.2f, 0.2f};
+    sfClock* clock = sfClock_create();
 
     /* Start the game loop */
     while (sfRenderWindow_isOpen(window))
     {
+        sfTime deltaTime = sfClock_restart(clock);
+        float dt = sfTime_asSeconds(deltaTime);
+
         /* Process events */
         while (sfRenderWindow_pollEvent(window, &event))
         {
@@ -74,7 +58,7 @@ int main()
                 sfRenderWindow_close(window);
             else if (event.type == sfEvtKeyPressed)
             {
-                // Handle key press event
+                // Movement
                 sfKeyCode keyCode = event.key.code;
                 if (keyCode == sfKeyRight)
                 {
@@ -95,7 +79,7 @@ int main()
             }
             else if (event.type == sfEvtKeyReleased)
             {
-                // Handle key release event
+                // Handle key release event (still movement)
                 sfKeyCode keyCode = event.key.code;
                 if (keyCode == sfKeyRight)
                 {
@@ -114,72 +98,69 @@ int main()
                     isPlayer2MovingLeft = sfFalse;
                 }
             }
-            else if (event.type == sfEvtMouseButtonPressed)
-            {
-                sfMouseButton mouseButton = event.mouseButton.button;
-            }
         }
 
         /* Update player 1 position based on movement flags */
         sfVector2f player1Movement = {0.0f, 0.0f};
         if (isPlayer1MovingRight)
         {
-            player1Movement.x += player1MovementSpeed;
+            player1Movement.x += player1MovementSpeed * dt;
         }
         else if (isPlayer1MovingLeft)
         {
-            player1Movement.x -= player1MovementSpeed;
+            player1Movement.x -= player1MovementSpeed * dt;
         }
-        sfVector2f newPlayer1Position = {player1Position.x + player1Movement.x, player1Position.y};
-        sfFloatRect player1Bounds = sfSprite_getGlobalBounds(sprite);
+        sfVector2f newPlayer1Position = {playerOnePosition.x + player1Movement.x, playerOnePosition.y};
+        sfFloatRect player1Bounds = sfSprite_getGlobalBounds(playerOne);
         if (newPlayer1Position.x + player1Bounds.width <= mode.width && newPlayer1Position.x >= 0.0f)
         {
-            player1Position = newPlayer1Position;
-            sfSprite_setPosition(sprite, player1Position);
+            playerOnePosition = newPlayer1Position;
+            sfSprite_setPosition(playerOne, playerOnePosition);
         }
 
         /* Update player 2 position based on movement flags */
         sfVector2f player2Movement = {0.0f, 0.0f};
         if (isPlayer2MovingRight)
         {
-            player2Movement.x += player2MovementSpeed;
+            player2Movement.x += player2MovementSpeed * dt;
         }
         else if (isPlayer2MovingLeft)
         {
-            player2Movement.x -= player2MovementSpeed;
+            player2Movement.x -= player2MovementSpeed * dt;
         }
-        sfVector2f newPlayer2Position = {player2Position.x + player2Movement.x, player2Position.y};
-        sfFloatRect player2Bounds = sfSprite_getGlobalBounds(player2Sprite);
+        sfVector2f newPlayer2Position = {playerTwoPosition.x + player2Movement.x, playerTwoPosition.y};
+        sfFloatRect player2Bounds = sfSprite_getGlobalBounds(playerTwo);
         if (newPlayer2Position.x + player2Bounds.width <= mode.width && newPlayer2Position.x >= 0.0f)
         {
-            player2Position = newPlayer2Position;
-            sfSprite_setPosition(player2Sprite, player2Position);
+            playerTwoPosition = newPlayer2Position;
+            sfSprite_setPosition(playerTwo, playerTwoPosition);
         }
 
         /* Update ball position */
-        sfVector2f newBallPosition = {ballPosition.x + ballVelocity.x, ballPosition.y + ballVelocity.y};
-        sfFloatRect ballBounds = sfSprite_getGlobalBounds(ballSprite);
+        sfVector2f ballMovement = {ballVelocity.x * dt, ballVelocity.y * dt};
+        sfVector2f newBallPosition = {ballPosition.x + ballMovement.x, ballPosition.y + ballMovement.y};
+        sfFloatRect ballBounds = sfSprite_getGlobalBounds(ball);
 
         /* Check ball collision with player 1 */
-        sfFloatRect player1Collision = sfSprite_getGlobalBounds(sprite);
+        sfFloatRect player1Collision = sfSprite_getGlobalBounds(playerOne);
         if (sfFloatRect_intersects(&player1Collision, &ballBounds, NULL))
         {
             // Reverse ball's vertical velocity
             ballVelocity.y = -ballVelocity.y;
 
             // Adjust ball's position to prevent sticking to the player
-            newBallPosition.y = player1Position.y - ballBounds.height;
+            newBallPosition.y = playerOnePosition.y - ballBounds.height;
         }
 
         /* Check ball collision with player 2 */
-        sfFloatRect player2Collision = sfSprite_getGlobalBounds(player2Sprite);
+        sfFloatRect player2Collision = sfSprite_getGlobalBounds(playerTwo);
         if (sfFloatRect_intersects(&player2Collision, &ballBounds, NULL))
         {
             // Reverse ball's vertical velocity
             ballVelocity.y = -ballVelocity.y;
 
             // Adjust ball's position to prevent sticking to the player
-            newBallPosition.y = player2Position.y + player2Bounds.height;
+            newBallPosition.y = playerTwoPosition.y + player2Bounds.height;
         }
 
         /* Check ball collision with window edges */
@@ -201,29 +182,37 @@ int main()
 
         /* Update ball position */
         ballPosition = newBallPosition;
-        sfSprite_setPosition(ballSprite, ballPosition);
+        sfSprite_setPosition(ball, ballPosition);
 
         /* Clear the screen */
         sfRenderWindow_clear(window, sfBlack);
 
         /* Draw the sprites */
-        sfRenderWindow_drawSprite(window, sprite, NULL);
-        sfRenderWindow_drawSprite(window, player2Sprite, NULL);
-        sfRenderWindow_drawSprite(window, ballSprite, NULL);
+        sfRenderWindow_drawSprite(window, playerOne, NULL);
+        sfRenderWindow_drawSprite(window, playerTwo, NULL);
+        sfRenderWindow_drawSprite(window, ball, NULL);
 
         /* Update the window */
         sfRenderWindow_display(window);
     }
 
     /* Cleanup resources */
-    sfMusic_destroy(music);
-    sfText_destroy(text);
-    sfFont_destroy(font);
-    sfSprite_destroy(sprite);
-    sfTexture_destroy(texture);
-    sfSprite_destroy(player2Sprite);
-    sfTexture_destroy(player2Texture);
     sfRenderWindow_destroy(window);
-    
+    sfSprite_destroy(playerOne);
+    sfSprite_destroy(playerTwo);
+    sfSprite_destroy(ball);
+    sfClock_destroy(clock);
+
     return 0;
+}
+
+sfSprite* initializeSprite(char* texture)
+{
+    sfTexture* spriteTexture = sfTexture_createFromFile(texture, NULL);
+    if (!spriteTexture)
+        return 1;
+
+    sfSprite* sprite = sfSprite_create();
+    sfSprite_setTexture(sprite, spriteTexture, sfTrue);
+    return sprite;
 }
