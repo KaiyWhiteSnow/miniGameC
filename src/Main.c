@@ -10,6 +10,8 @@ int main()
     sfSprite* sprite;
     sfTexture* player2Texture;
     sfSprite* player2Sprite;
+    sfTexture* ballTexture;
+    sfSprite* ballSprite;
     sfFont* font;
     sfText* text;
     sfMusic* music;
@@ -34,11 +36,20 @@ int main()
     player2Sprite = sfSprite_create();
     sfSprite_setTexture(player2Sprite, player2Texture, sfTrue);
 
-    /* Set initial positions for both players */
-    sfVector2f player1Position = {350.0f, 50.0f};
-    sfVector2f player2Position = {350.0f, 500.0f};
+    /* Load ball texture */
+    ballTexture = sfTexture_createFromFile("./sprites/ball.jpg", NULL);
+    if (!ballTexture)
+        return 1;
+    ballSprite = sfSprite_create();
+    sfSprite_setTexture(ballSprite, ballTexture, sfTrue);
+
+    /* Set initial positions for both players and ball */
+    sfVector2f player1Position = {350.0f, 540.0f};
+    sfVector2f player2Position = {350.0f, 10.0f};
+    sfVector2f ballPosition = {350.0f, 250.0f};
     sfSprite_setPosition(sprite, player1Position);
     sfSprite_setPosition(player2Sprite, player2Position);
+    sfSprite_setPosition(ballSprite, ballPosition);
 
     /* Set movement flags for both players */
     sfBool isPlayer1MovingLeft = sfFalse;
@@ -49,6 +60,9 @@ int main()
     /* Set movement speed for both players */
     float player1MovementSpeed = 0.5f;
     float player2MovementSpeed = 0.5f;
+
+    /* Set ball velocity */
+    sfVector2f ballVelocity = {0.2f, 0.2f};
 
     /* Start the game loop */
     while (sfRenderWindow_isOpen(window))
@@ -142,12 +156,60 @@ int main()
             sfSprite_setPosition(player2Sprite, player2Position);
         }
 
+        /* Update ball position */
+        sfVector2f newBallPosition = {ballPosition.x + ballVelocity.x, ballPosition.y + ballVelocity.y};
+        sfFloatRect ballBounds = sfSprite_getGlobalBounds(ballSprite);
+
+        /* Check ball collision with player 1 */
+        sfFloatRect player1Collision = sfSprite_getGlobalBounds(sprite);
+        if (sfFloatRect_intersects(&player1Collision, &ballBounds, NULL))
+        {
+            // Reverse ball's vertical velocity
+            ballVelocity.y = -ballVelocity.y;
+
+            // Adjust ball's position to prevent sticking to the player
+            newBallPosition.y = player1Position.y - ballBounds.height;
+        }
+
+        /* Check ball collision with player 2 */
+        sfFloatRect player2Collision = sfSprite_getGlobalBounds(player2Sprite);
+        if (sfFloatRect_intersects(&player2Collision, &ballBounds, NULL))
+        {
+            // Reverse ball's vertical velocity
+            ballVelocity.y = -ballVelocity.y;
+
+            // Adjust ball's position to prevent sticking to the player
+            newBallPosition.y = player2Position.y + player2Bounds.height;
+        }
+
+        /* Check ball collision with window edges */
+        if (newBallPosition.x + ballBounds.width > mode.width || newBallPosition.x < 0.0f)
+        {
+            // Reverse ball's horizontal velocity
+            ballVelocity.x = -ballVelocity.x;
+        }
+
+        if (newBallPosition.y + ballBounds.height > mode.height || newBallPosition.y < 0.0f)
+        {
+            // Reset ball position to the middle of the window
+            newBallPosition.x = mode.width / 2 - ballBounds.width / 2;
+            newBallPosition.y = mode.height / 2 - ballBounds.height / 2;
+            
+            // Reverse ball's vertical velocity
+            ballVelocity.y = -ballVelocity.y;
+        }
+
+        /* Update ball position */
+        ballPosition = newBallPosition;
+        sfSprite_setPosition(ballSprite, ballPosition);
+
         /* Clear the screen */
         sfRenderWindow_clear(window, sfBlack);
 
         /* Draw the sprites */
         sfRenderWindow_drawSprite(window, sprite, NULL);
         sfRenderWindow_drawSprite(window, player2Sprite, NULL);
+        sfRenderWindow_drawSprite(window, ballSprite, NULL);
 
         /* Update the window */
         sfRenderWindow_display(window);
@@ -162,5 +224,6 @@ int main()
     sfSprite_destroy(player2Sprite);
     sfTexture_destroy(player2Texture);
     sfRenderWindow_destroy(window);
+    
     return 0;
 }
