@@ -1,11 +1,12 @@
 #include <SFML/Audio.h>
 #include <SFML/Graphics.h>
 #include <SFML/System/Vector2.h>
+#include <SFML/Window/VideoMode.h>
 
-/*Prepare textures*/ 
-sfSprite* initializeSprite(char* texture);
+/* Prepare textures */
+sfSprite* initializeSprite(const char* texture);
 
-//variables
+// Variables
 /* Set movement flags for both players */
 sfBool isPlayer1MovingLeft = sfFalse;
 sfBool isPlayer1MovingRight = sfFalse;
@@ -14,15 +15,18 @@ sfBool isPlayer2MovingRight = sfFalse;
 
 /* Set movement speed for both players */
 float player1MovementSpeed = 300.0f;
-float player2MovementSpeed = 300.0f;  
+float player2MovementSpeed = 300.0f;
 
 /* Set ball velocity */
-sfVector2f ballVelocity = {400.0f, 400.0f};  
+sfVector2f ballVelocity = {400.0f, 400.0f};
 
 /* Set initial positions for both players and ball */
 sfVector2f playerOnePosition = {350.0f, 540.0f};
 sfVector2f playerTwoPosition = {350.0f, 10.0f};
 sfVector2f ballPosition = {350.0f, 250.0f};
+
+void updateCollisions(sfSprite* playerOne, sfSprite* playerTwo, sfSprite* ball, sfVector2f* ballVelocity, sfVector2f* ballPosition, sfVideoMode mode);
+
 
 int main()
 {
@@ -141,48 +145,12 @@ int main()
         sfVector2f newBallPosition = {ballPosition.x + ballMovement.x, ballPosition.y + ballMovement.y};
         sfFloatRect ballBounds = sfSprite_getGlobalBounds(ball);
 
-        /* Check ball collision with player 1 */
-        sfFloatRect player1Collision = sfSprite_getGlobalBounds(playerOne);
-        if (sfFloatRect_intersects(&player1Collision, &ballBounds, NULL))
-        {
-            // Reverse ball's vertical velocity
-            ballVelocity.y = -ballVelocity.y;
-
-            // Adjust ball's position to prevent sticking to the player
-            newBallPosition.y = playerOnePosition.y - ballBounds.height;
-        }
-
-        /* Check ball collision with player 2 */
-        sfFloatRect player2Collision = sfSprite_getGlobalBounds(playerTwo);
-        if (sfFloatRect_intersects(&player2Collision, &ballBounds, NULL))
-        {
-            // Reverse ball's vertical velocity
-            ballVelocity.y = -ballVelocity.y;
-
-            // Adjust ball's position to prevent sticking to the player
-            newBallPosition.y = playerTwoPosition.y + player2Bounds.height;
-        }
-
-        /* Check ball collision with window edges */
-        if (newBallPosition.x + ballBounds.width > mode.width || newBallPosition.x < 0.0f)
-        {
-            // Reverse ball's horizontal velocity
-            ballVelocity.x = -ballVelocity.x;
-        }
-
-        if (newBallPosition.y + ballBounds.height > mode.height || newBallPosition.y < 0.0f)
-        {
-            // Reset ball position to the middle of the window
-            newBallPosition.x = mode.width / 2 - ballBounds.width / 2;
-            newBallPosition.y = mode.height / 2 - ballBounds.height / 2;
-            
-            // Reverse ball's vertical velocity
-            ballVelocity.y = -ballVelocity.y;
-        }
-
         /* Update ball position */
         ballPosition = newBallPosition;
         sfSprite_setPosition(ball, ballPosition);
+        
+        /* Update collisions */
+        updateCollisions(playerOne, playerTwo, ball, &ballVelocity, &ballPosition, mode);
 
         /* Clear the screen */
         sfRenderWindow_clear(window, sfBlack);
@@ -206,13 +174,59 @@ int main()
     return 0;
 }
 
-sfSprite* initializeSprite(char* texture)
+sfSprite* initializeSprite(const char* texture)
 {
+    /* Create Texture */
     sfTexture* spriteTexture = sfTexture_createFromFile(texture, NULL);
     if (!spriteTexture)
-        return 1;
+        return NULL;
 
+    /* Create sprite */
     sfSprite* sprite = sfSprite_create();
     sfSprite_setTexture(sprite, spriteTexture, sfTrue);
     return sprite;
+}
+
+void updateCollisions(sfSprite* playerOne, sfSprite* playerTwo, sfSprite* ball, sfVector2f* ballVelocity, sfVector2f* ballPosition, sfVideoMode mode)
+{
+    sfFloatRect ballBounds = sfSprite_getGlobalBounds(ball);
+
+    /* Check ball collision with player 1 */
+    sfFloatRect player1Bounds = sfSprite_getGlobalBounds(playerOne);
+    if (sfFloatRect_intersects(&player1Bounds, &ballBounds, NULL))
+    {
+        // Reverse ball's vertical velocity
+        ballVelocity->y = -ballVelocity->y;
+
+        // Adjust ball's position to prevent sticking to the player
+        ballPosition->y = playerOnePosition.y - ballBounds.height;
+    }
+
+    /* Check ball collision with player 2 */
+    sfFloatRect player2Bounds = sfSprite_getGlobalBounds(playerTwo);
+    if (sfFloatRect_intersects(&player2Bounds, &ballBounds, NULL))
+    {
+        // Reverse ball's vertical velocity
+        ballVelocity->y = -ballVelocity->y;
+
+        // Adjust ball's position to prevent sticking to the player
+        ballPosition->y = playerTwoPosition.y + player2Bounds.height;
+    }
+
+    /* Check ball collision with window edges */
+    if (ballPosition->x + ballBounds.width > mode.width || ballPosition->x < 0.0f)
+    {
+        // Reverse ball's horizontal velocity
+        ballVelocity->x = -ballVelocity->x;
+    }
+
+    if (ballPosition->y + ballBounds.height > mode.height || ballPosition->y < 0.0f)
+    {
+        // Reset ball position to the middle of the window
+        ballPosition->x = mode.width / 2 - ballBounds.width / 2;
+        ballPosition->y = mode.height / 2 - ballBounds.height / 2;
+        
+        // Reverse ball's vertical velocity
+        ballVelocity->y = -ballVelocity->y;
+    }
 }
