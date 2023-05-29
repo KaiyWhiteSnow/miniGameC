@@ -60,9 +60,12 @@ int main()
 
     /* Set player into place */
     float xCoordinate = mode.width / 2 - player1Bounds.width / 2;
+    float xBallCoordinate = mode.width / 2 - ballBounds.width / 2;
+    float yBallCoordinate = mode.height /2 - ballBounds.height /2;
     playerOnePosition.x = xCoordinate;
     playerTwoPosition.x = xCoordinate;
     ballPosition.x = xCoordinate;
+    ballPosition.y = yBallCoordinate;
 
     /* Start the game loop */
     while (sfRenderWindow_isOpen(window))
@@ -172,16 +175,7 @@ int main()
         updateCollisions(playerOne, playerTwo, ball, &ballVelocity, &ballPosition, mode, &resetVelocity, keyPressFlag);
 
 
-        /* Clear the screen */
-        sfRenderWindow_clear(window, sfBlack);
-
-        /* Draw the sprites */
-        sfRenderWindow_drawSprite(window, playerOne, NULL);
-        sfRenderWindow_drawSprite(window, playerTwo, NULL);
-        sfRenderWindow_drawSprite(window, ball, NULL);
-
-        /* Update the window */
-        sfRenderWindow_display(window);
+        update(playerOne, playerTwo, ball, window);
     }
 
     /* Cleanup resources */
@@ -192,6 +186,20 @@ int main()
     sfClock_destroy(clock);
 
     return 0;
+}
+
+void update(sfSprite* playerOne, sfSprite* playerTwo, sfSprite* ball, sfWindow* window)
+{
+    /* Clear the screen */
+    sfRenderWindow_clear(window, sfBlack);
+
+    /* Draw the sprites */
+    sfRenderWindow_drawSprite(window, playerOne, NULL);
+    sfRenderWindow_drawSprite(window, playerTwo, NULL);
+    sfRenderWindow_drawSprite(window, ball, NULL);
+
+    /* Update the window */
+    sfRenderWindow_display(window);
 }
 
 sfSprite* initializeSprite(const char* texture)
@@ -244,7 +252,7 @@ void updateCollisions(sfSprite* playerOne, sfSprite* playerTwo, sfSprite* ball, 
         // Reset ball position to the middle of the window
         ballPosition->x = mode.width / 2 - ballBounds.width / 2;
         ballPosition->y = mode.height / 2 - ballBounds.height / 2;
-        
+
         /* Redefined - May cause issues later on, find a fix */
         float xCoordinate = mode.width / 2 - player1Bounds.width / 2;
         playerOnePosition.x = xCoordinate;
